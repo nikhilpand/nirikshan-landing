@@ -2,178 +2,853 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react'
 import { Icon } from './icon'
-import { LINKS, gaps, stack, workflow } from '@/lib/content'
+import {
+  LINKS,
+  PROJECT_INFO,
+  CORE_METRICS,
+  TRUST_ENGINE_STEPS,
+  OFFLINE_LIFECYCLE,
+  PRODUCT_SURFACES,
+  SIMULATED_AUDITS,
+  TECH_SPECS,
+} from '@/lib/content'
 
 function cn(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(' ')
 }
 
-function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
-  return <div className={cn('reveal', className)} style={{ '--delay': `${delay}s` } as CSSProperties}>{children}</div>
+function Reveal({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: ReactNode
+  className?: string
+  delay?: number
+}) {
+  return (
+    <div className={cn('reveal', className)} style={{ '--delay': `${delay}s` } as CSSProperties}>
+      {children}
+    </div>
+  )
 }
 
-function MagneticButton({ href, children, secondary = false, target }: { href: string; children: ReactNode; secondary?: boolean; target?: string }) {
+function MagneticButton({
+  href,
+  children,
+  secondary = false,
+  target,
+  onClick,
+}: {
+  href?: string
+  children: ReactNode
+  secondary?: boolean
+  target?: string
+  onClick?: () => void
+}) {
   const ref = useRef<HTMLAnchorElement>(null)
   const frame = useRef<number | null>(null)
+
   const handleMove = (event: ReactMouseEvent<HTMLAnchorElement>) => {
     const el = ref.current
     if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const box = el.getBoundingClientRect()
-    const dx = (event.clientX - box.left - box.width / 2) * 0.10
-    const dy = (event.clientY - box.top - box.height / 2) * 0.14
+    const dx = (event.clientX - box.left - box.width / 2) * 0.08
+    const dy = (event.clientY - box.top - box.height / 2) * 0.12
     if (frame.current) cancelAnimationFrame(frame.current)
     frame.current = requestAnimationFrame(() => el.style.setProperty('--mx', `${dx}px`))
     el.style.setProperty('--my', `${dy}px`)
   }
+
   const reset = () => {
     const el = ref.current
     if (!el) return
     el.style.setProperty('--mx', '0px')
     el.style.setProperty('--my', '0px')
   }
-  useEffect(() => () => { if (frame.current) cancelAnimationFrame(frame.current) }, [])
+
+  useEffect(() => {
+    return () => {
+      if (frame.current) cancelAnimationFrame(frame.current)
+    }
+  }, [])
+
   return (
-    <a ref={ref} href={href} target={target} rel={target ? 'noreferrer' : undefined} className={cn('magnetic-btn', secondary ? 'magnetic-btn--secondary' : 'magnetic-btn--primary')} onMouseMove={handleMove} onMouseLeave={reset}>
-      <span>{children}</span><Icon name="arrowUp" size={17} />
+    <a
+      ref={ref}
+      href={href || '#'}
+      target={target}
+      rel={target ? 'noreferrer' : undefined}
+      onClick={onClick}
+      className={cn('magnetic-btn', secondary ? 'magnetic-btn--secondary' : 'magnetic-btn--primary')}
+      onMouseMove={handleMove}
+      onMouseLeave={reset}
+    >
+      <span>{children}</span>
+      <Icon name="arrowUp" size={15} />
     </a>
   )
 }
 
 function Logo() {
-  return <a href="#top" className="brand" aria-label="NIRIKSHAN home">
-    <span className="brand-mark"><span>N</span><i /></span>
-    <span><strong>NIRIKSHAN</strong><small>TEAM SQUAREX • SIH 2026</small></span>
-  </a>
+  return (
+    <a href="#top" className="brand" aria-label="NIRIKSHAN Home">
+      <span className="brand-mark">
+        <span>N</span>
+        <i />
+      </span>
+      <span>
+        <strong>{PROJECT_INFO.name}</strong>
+        <small>{PROJECT_INFO.team} • {PROJECT_INFO.problemId}</small>
+      </span>
+    </a>
+  )
 }
 
 function QRModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onKey)
-    const previous = document.body.style.overflow
+    const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = previous }
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
   }, [open, onClose])
+
   if (!open) return null
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="NIRIKSHAN officer app QR code" onMouseDown={onClose}>
-    <div className="qr-modal" onMouseDown={e => e.stopPropagation()}>
-      <button className="modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={20} /></button>
-      <div className="eyebrow eyebrow--sky">OFFICER APP</div>
-      <h3>Scan to install NIRIKSHAN.</h3>
-      <p>Open the camera on your phone and scan this code.</p>
-      <div className="qr-large"><img src="/nirikshan-app-qr.svg" alt="QR code to download the NIRIKSHAN Officer App" /></div>
-      <a className="modal-download" href={LINKS.app}><Icon name="download" size={17}/> Download APK directly</a>
+
+  return (
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Inspector APK Download QR"
+      onMouseDown={onClose}
+    >
+      <div className="qr-modal" onMouseDown={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} aria-label="Close dialog">
+          <Icon name="close" size={18} />
+        </button>
+        <div className="eyebrow eyebrow--emerald">OFFICIAL ANDROID CLIENT</div>
+        <h3>Scan to Install Inspector App</h3>
+        <p>Point any Android camera or QR scanner to download the signed v1.0.0 APK release.</p>
+        <div className="qr-frame">
+          <img src="/nirikshan-app-qr.svg" alt="NIRIKSHAN Inspector App QR Code" />
+        </div>
+        <div className="modal-badges">
+          <span><Icon name="shield" size={13} /> Hardware Verified</span>
+          <span><Icon name="wifi" size={13} /> 100% Offline Ready</span>
+        </div>
+        <a className="modal-download-btn" href={LINKS.app} target="_blank" rel="noreferrer">
+          <Icon name="download" size={16} /> Direct APK Download
+        </a>
+      </div>
     </div>
-  </div>
+  )
 }
 
-function Nav() {
+function Nav({ onQr }: { onQr: () => void }) {
   const [open, setOpen] = useState(false)
-  return <header className="nav-shell">
-    <div className="nav">
-      <Logo />
-      <nav className={cn('desktop-nav', open && 'desktop-nav--open')}>
-        <a href="#problem" onClick={() => setOpen(false)}>Why</a>
-        <a href="#control" onClick={() => setOpen(false)}>Control layer</a>
-        <a href="#architecture" onClick={() => setOpen(false)}>Technology</a>
-        <a href="#impact" onClick={() => setOpen(false)}>Impact</a>
-      </nav>
-      <div className="nav-actions"><a className="nav-pill" href={LINKS.portal} target="_blank" rel="noreferrer">Live portal <Icon name="arrowUp" size={14}/></a><button className="menu-btn" onClick={() => setOpen(v => !v)} aria-label="Toggle navigation"><Icon name={open ? 'close' : 'menu'} size={20}/></button></div>
-    </div>
-  </header>
-}
 
-function HeroVisual({ onQr }: { onQr: () => void }) {
-  return <div className="hero-visual">
-    <div className="orb orb--yellow"/><div className="orb orb--sky"/><div className="orb orb--mint"/>
-    <div className="hero-card">
-      <div className="hero-card__top"><div><span>LIVE INSPECTION</span><strong>Facility #0482</strong></div><b><i/> VERIFIED</b></div>
-      <div className="map-panel">
-        <div className="map-grid"/>
-        <div className="map-road road-a"/><div className="map-road road-b"/><div className="map-road road-c"/>
-        <div className="geofence geofence--outer"/><div className="geofence geofence--inner"/><div className="map-pin"><span/></div>
-        <div className="map-label map-label--top"><Icon name="pin" size={15}/> Within 150m <b>VERIFIED</b></div>
-        <div className="scan-sweep"/>
-        <div className="qr-scene" onClick={onQr} role="button" tabIndex={0} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onQr() }} aria-label="Open NIRIKSHAN app QR code">
-          <div className="qr-scene__glow"/><div className="qr-scene__panel"><img src="/nirikshan-app-qr.svg" alt="NIRIKSHAN app QR"/><span>SCAN APP</span></div>
+  return (
+    <header className="nav-shell">
+      <div className="nav">
+        <Logo />
+        <nav className={cn('desktop-nav', open && 'desktop-nav--open')}>
+          <a href="#surfaces" onClick={() => setOpen(false)}>Surfaces</a>
+          <a href="#trust-engine" onClick={() => setOpen(false)}>Trust Engine</a>
+          <a href="#offline-flow" onClick={() => setOpen(false)}>Offline → Sync</a>
+          <a href="#dashboard" onClick={() => setOpen(false)}>Command Center</a>
+          <a href="#specs" onClick={() => setOpen(false)}>Specifications</a>
+        </nav>
+        <div className="nav-actions">
+          <button className="nav-qr-btn" onClick={onQr} aria-label="Scan App QR Code">
+            <Icon name="qr" size={14} />
+            <span>Scan APK</span>
+          </button>
+          <a className="nav-primary-btn" href={LINKS.portal} target="_blank" rel="noreferrer">
+            <span>Live Portal</span>
+            <Icon name="arrowUp" size={13} />
+          </a>
+          <button
+            className="menu-btn"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Toggle navigation"
+          >
+            <Icon name={open ? 'close' : 'menu'} size={18} />
+          </button>
         </div>
       </div>
-      <div className="hero-mini-grid">
-        <div><span className="mini-icon mini-icon--sky"><Icon name="qr" size={18}/></span><small>QR LOCK</small><strong>Verified</strong></div>
-        <div><span className="mini-icon mini-icon--mint"><Icon name="camera" size={18}/></span><small>EVIDENCE</small><strong>Geotagged</strong></div>
-        <div><span className="mini-icon mini-icon--yellow"><Icon name="bolt" size={18}/></span><small>ALERTS</small><strong>Live</strong></div>
-      </div>
-    </div>
-    <div className="float-card float-card--left"><span className="status-dot status-dot--mint"><Icon name="shield" size={17}/></span><div><small>PHYSICAL PRESENCE</small><strong>QR + GPS locked</strong></div></div>
-    <div className="float-card float-card--right"><span className="status-dot status-dot--yellow"><Icon name="bolt" size={17}/></span><div><small>RESPONSE</small><strong>&lt; 500ms alerts</strong></div></div>
-    <div className="scroll-cue"><span/><small>Scroll to explore</small></div>
-  </div>
+    </header>
+  )
 }
 
 function Hero({ onQr }: { onQr: () => void }) {
-  return <section id="top" className="hero section-pad">
-    <div className="background-lines"/><div className="hero-glow hero-glow--one"/><div className="hero-glow hero-glow--two"/>
-    <div className="container hero-grid">
-      <div className="hero-copy">
-        <Reveal><div className="eyebrow"><span className="live-dot"/> SMART INDIA HACKATHON 2026 <em>•</em> SIH26095</div></Reveal>
-        <Reveal delay={0.05}><h1>Inspect.<br/><span>Verify.</span><br/>Create real <u>impact.</u></h1></Reveal>
-        <Reveal delay={0.1}><p className="hero-lede">NIRIKSHAN turns field inspections into a live, evidence-backed control loop — verify presence, capture proof and trigger action without waiting for the paperwork.</p></Reveal>
-        <Reveal delay={0.15}><div className="hero-ctas"><MagneticButton href={LINKS.portal}>Open NIRIKSHAN portal</MagneticButton><MagneticButton href={LINKS.demo} secondary target="_blank"><Icon name="play" size={16}/> Watch demo</MagneticButton></div></Reveal>
-        <Reveal delay={0.2}><div className="trust-row"><span><Icon name="qr" size={15}/> QR + 150m GPS</span><span><Icon name="bolt" size={15}/> Live alerts</span><span><Icon name="wifi" size={15}/> Offline ready</span><span><Icon name="shield" size={15}/> Evidence-first</span></div></Reveal>
+  return (
+    <section id="top" className="hero section-pad">
+      <div className="container hero-grid">
+        <div className="hero-content">
+          <Reveal>
+            <div className="hero-status-pill">
+              <span className="status-ping" />
+              <strong>{PROJECT_INFO.hackathon}</strong>
+              <span className="meta-sep">/</span>
+              <span>PROBLEM ID {PROJECT_INFO.problemId}</span>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.06}>
+            <h1 className="hero-title">
+              Physical presence verified.
+              <br />
+              <span className="text-emerald">Zero ghost inspections.</span>
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.12}>
+            <p className="hero-desc">
+              NIRIKSHAN binds government field audits to a <strong>150m Haversine GPS geofence</strong> and
+              <strong>dynamic wall QR codes</strong>. Real-time verification for inspectors on-site and
+              command teams at headquarters with complete offline resilience.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.18}>
+            <div className="hero-actions">
+              <MagneticButton href={LINKS.portal} target="_blank">
+                Launch Command Center
+              </MagneticButton>
+              <MagneticButton href={LINKS.demo} secondary target="_blank">
+                <Icon name="play" size={15} /> Watch Demonstration
+              </MagneticButton>
+              <button className="hero-app-btn" onClick={onQr} aria-label="Download Inspector App">
+                <Icon name="qr" size={16} />
+                <span>Get Inspector App</span>
+              </button>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.24}>
+            <div className="hero-metric-ticker">
+              <div className="ticker-item">
+                <Icon name="pin" size={13} />
+                <span>150m Geofence Lock</span>
+              </div>
+              <div className="ticker-item">
+                <Icon name="bolt" size={13} />
+                <span>&lt;500ms Socket Alerts</span>
+              </div>
+              <div className="ticker-item">
+                <Icon name="wifi" size={13} />
+                <span>SQLite Store-and-Forward</span>
+              </div>
+              <div className="ticker-item">
+                <Icon name="shield" size={13} />
+                <span>Cryptographic Audit Trail</span>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+
+        <Reveal className="hero-visual-col" delay={0.14}>
+          <div className="hero-telemetry-card">
+            <div className="telemetry-top">
+              <div className="telemetry-live">
+                <span className="live-indicator-dot" />
+                <span>ACTIVE INSPECTION IN PROGRESS</span>
+              </div>
+              <span className="telemetry-badge">FACILITY #0482</span>
+            </div>
+
+            <div className="hero-preview-frame">
+              <img
+                src="/hero-inspector.jpg"
+                alt="Field Inspector verifying physical presence with dynamic QR code"
+                className="hero-card-img"
+              />
+              <div className="preview-overlay">
+                <div className="overlay-geofence-box">
+                  <Icon name="pin" size={13} />
+                  <span>38.2m from target • Geofence Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="telemetry-bottom-grid">
+              <div>
+                <small>INSPECTION ASSIGNMENT</small>
+                <strong>Surprise Allocation (T-74m)</strong>
+              </div>
+              <div className="grid-sep" />
+              <div>
+                <small>IMAGE SOURCE</small>
+                <strong>Direct Camera Stream</strong>
+              </div>
+              <div className="grid-sep" />
+              <div>
+                <small>INTEGRITY HASH</small>
+                <strong className="text-emerald">SHA-256 Validated</strong>
+              </div>
+            </div>
+          </div>
+        </Reveal>
       </div>
-      <Reveal className="hero-visual-wrap" delay={0.12}><HeroVisual onQr={onQr}/></Reveal>
-    </div>
-  </section>
+    </section>
+  )
 }
 
-function SectionTitle({ eyebrow, title, body, dark = false }: { eyebrow: string; title: string; body?: string; dark?: boolean }) {
-  return <div className={cn('section-title', dark && 'section-title--dark')}><div className="eyebrow">{eyebrow}</div><h2 dangerouslySetInnerHTML={{ __html: title }}/>{body && <p>{body}</p>}</div>
+function ProductSurfaces() {
+  const [activeSurface, setActiveSurface] = useState<'inspector' | 'command'>('inspector')
+
+  return (
+    <section id="surfaces" className="section-pad surfaces-section">
+      <div className="container">
+        <Reveal>
+          <div className="section-header">
+            <div className="eyebrow eyebrow--emerald">TWO SIDES OF THE PLATFORM</div>
+            <h2>Built for the Field Officer & the Command Center</h2>
+            <p>
+              NIRIKSHAN is designed as a synchronized system: an ultra-lightweight client for rugged
+              field devices and an operations console for supervisory oversight.
+            </p>
+
+            <div className="surface-selector-pill">
+              <button
+                className={cn('surface-tab-btn', activeSurface === 'inspector' && 'surface-tab-btn--active')}
+                onClick={() => setActiveSurface('inspector')}
+              >
+                <Icon name="pin" size={15} />
+                <span>Inspector Mobile Client</span>
+              </button>
+              <button
+                className={cn('surface-tab-btn', activeSurface === 'command' && 'surface-tab-btn--active')}
+                onClick={() => setActiveSurface('command')}
+              >
+                <Icon name="radar" size={15} />
+                <span>Command & Operations Center</span>
+              </button>
+            </div>
+          </div>
+        </Reveal>
+
+        <div className="surface-showcase-card">
+          {activeSurface === 'inspector' ? (
+            <div className="surface-grid">
+              <div className="surface-text">
+                <span className="surface-tag">REACT NATIVE / EXPO • SQLITE</span>
+                <h3>Field Inspector Mobile Application</h3>
+                <p>
+                  Built for field conditions with spotty network coverage and budget hardware. The client
+                  enforces physical presence using hardware location sensors and camera APIs while
+                  prohibiting mock locations or stored gallery uploads.
+                </p>
+
+                <ul className="surface-feature-list">
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>150m Geofence Lock:</strong> Audit forms remain strictly disabled until distance to registered facility is verified.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Dynamic QR Handshake:</strong> Reads on-site QR codes with rotating cryptographically salted tokens.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Encrypted SQLite Cache:</strong> Completes audits in full offline mode, queueing evidence safely until connectivity resumes.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Direct In-App Camera:</strong> Strips gallery upload access to eliminate fraudulent or repurposed photography.</span>
+                  </li>
+                </ul>
+
+                <div className="surface-meta-strip">
+                  <span>Architecture: <strong>React Native • SQLite • Native Keystore</strong></span>
+                </div>
+              </div>
+
+              <div className="surface-visual">
+                <div className="mock-phone-frame">
+                  <div className="mock-phone-header">
+                    <span>NIRIKSHAN CLIENT</span>
+                    <span>4G • 94%</span>
+                  </div>
+                  <div className="mock-phone-body">
+                    <div className="client-status-card">
+                      <span className="status-dot-emerald" />
+                      <div>
+                        <strong>Physical Presence Verified</strong>
+                        <small>Haversine Distance: 38.2m (Target: &lt;150m)</small>
+                      </div>
+                    </div>
+
+                    <div className="client-evidence-box">
+                      <small>CHECKLIST PROGRESS</small>
+                      <strong>18 of 18 Parameters Verified</strong>
+                      <div className="progress-bar-wrap">
+                        <div className="progress-bar-fill" style={{ width: '100%' }} />
+                      </div>
+                    </div>
+
+                    <div className="client-tag-row">
+                      <span>Camera: EXIF Signed</span>
+                      <span>SQLite: Synced</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="surface-grid">
+              <div className="surface-text">
+                <span className="surface-tag">FASTIFY • SOCKET.IO • MONGODB ATLAS</span>
+                <h3>Command & Operations Center</h3>
+                <p>
+                  The administrative cockpit for District Collectors, State Observers, and department
+                  heads. Provides instant visibility into active field audits, flag escalations, and
+                  geofence proximity.
+                </p>
+
+                <ul className="surface-feature-list">
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Sub-500ms Incident Broadcast:</strong> WebSocket alerts trigger when high-severity non-compliance items are detected.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Geofence Radar Cockpit:</strong> Real-time map visualization of inspector proximity across active facilities.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>Proof-of-Fix Mandate:</strong> Tickets cannot be marked resolved without photographic verification audited by secondary desk.</span>
+                  </li>
+                  <li>
+                    <Icon name="check" size={15} />
+                    <span><strong>RTSP Remote Watch:</strong> Integration hook for live surveillance feeds during high-stakes sensitive inspections.</span>
+                  </li>
+                </ul>
+
+                <div className="surface-meta-strip">
+                  <span>Stack: <strong>Next.js • Fastify • Socket.io • MongoDB Atlas</strong></span>
+                </div>
+              </div>
+
+              <div className="surface-visual">
+                <div className="mock-terminal-frame">
+                  <div className="mock-terminal-header">
+                    <span>OPS MONITOR // INCIDENT QUEUE</span>
+                    <span>WEBSOCKET: ACTIVE</span>
+                  </div>
+                  <div className="mock-terminal-body">
+                    <div className="terminal-incident-entry">
+                      <div className="entry-header">
+                        <span className="badge-flag">CRITICAL NON-COMPLIANCE</span>
+                        <small>09:42:15 AM</small>
+                      </div>
+                      <strong>Facility #0482: Storage Temperature Deviation</strong>
+                      <p>Cold-chain vaccine refrigeration logged at 8.4°C (Mandate: 2–6°C). Secondary desk alerted.</p>
+                      <code>Latency: 342ms • Audit ID #IR-1048 • WebSocket Broadcast Sent</code>
+                    </div>
+
+                    <div className="terminal-status-row">
+                      <span>Active Field Audits: <strong>14</strong></span>
+                      <span>Flagged Incidents: <strong>2</strong></span>
+                      <span>Resolved Today: <strong>9</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function Problem() {
-  return <section id="problem" className="section-pad section-soft"><div className="container">
-    <Reveal><SectionTitle eyebrow="THE PROBLEM" title="Where trust breaks,<br/><span>verification must step in.</span>" body="The inspection mandate can stay the same. NIRIKSHAN strengthens the layer around it."/></Reveal>
-    <div className="gap-grid">{gaps.map(([n, title, desc], i) => <Reveal key={n} delay={i * 0.05}><article className={cn('gap-card', `gap-card--${i + 1}`)}><span>{n}</span><div className="gap-accent"/><h3>{title}</h3><p>{desc}</p></article></Reveal>)}</div>
-  </div></section>
+function TrustEngine() {
+  const [activeStep, setActiveStep] = useState(0)
+  const current = TRUST_ENGINE_STEPS[activeStep]
+
+  return (
+    <section id="trust-engine" className="section-pad trust-engine-section">
+      <div className="container">
+        <Reveal>
+          <div className="section-header">
+            <div className="eyebrow eyebrow--emerald">VERIFICATION PIPELINE</div>
+            <h2>The Verification & Trust Engine</h2>
+            <p>
+              Four cryptographic layers enforce integrity at every step of the inspection, ensuring that
+              records cannot be falsified, backdated, or submitted remotely.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="engine-layout">
+          <div className="engine-nav-list">
+            {TRUST_ENGINE_STEPS.map((step, idx) => (
+              <button
+                key={step.id}
+                className={cn('engine-nav-item', idx === activeStep && 'engine-nav-item--active')}
+                onClick={() => setActiveStep(idx)}
+              >
+                <div className="step-num-badge">{step.id}</div>
+                <div className="step-nav-info">
+                  <span className="step-nav-label">{step.label}</span>
+                  <strong>{step.title}</strong>
+                </div>
+                {idx === activeStep && <div className="engine-nav-indicator" />}
+              </button>
+            ))}
+          </div>
+
+          <div className="engine-display-panel">
+            <div className="engine-panel-card">
+              <div className="panel-header">
+                <div className="panel-badge-wrap">
+                  <span className="panel-step-tag">LAYER {current.id} // {current.label}</span>
+                </div>
+                <span className="panel-valid-tag">{current.validation}</span>
+              </div>
+
+              <h3>{current.title}</h3>
+              <p className="panel-desc">{current.desc}</p>
+
+              <div className="panel-code-box">
+                <div className="code-label">CRYPTOGRAPHIC INTEGRITY PROTOCOL</div>
+                <code>{current.detail}</code>
+              </div>
+
+              <div className="engine-indicators">
+                <div className="indicator-item">
+                  <Icon name="shield" size={15} />
+                  <span>Tamper-Resistant</span>
+                </div>
+                <div className="indicator-item">
+                  <Icon name="check" size={15} />
+                  <span>Hardware Enforced</span>
+                </div>
+                <div className="indicator-item">
+                  <Icon name="lock" size={15} />
+                  <span>Cryptographically Signed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function Workflow() {
-  return <section id="control" className="workflow section-pad"><div className="workflow-glow"/><div className="container">
-    <Reveal><SectionTitle dark eyebrow="THE CONTROL LAYER" title="One continuous loop.<br/><span>Five moments of proof.</span>" body="From surprise assignment to proof-of-fix, every meaningful step leaves a trace."/></Reveal>
-    <div className="workflow-path">
-      {workflow.map(([n, title, desc, icon], i) => <div className="workflow-step" key={n}><div className="workflow-node"><span>{n}</span><div className="node-icon"><Icon name={icon} size={23}/></div></div><h3>{title}</h3><p>{desc}</p>{i < workflow.length - 1 && <div className="workflow-connector"><i/></div>}</div>)}
-    </div>
-    <Reveal delay={0.12}><div className="workflow-foot"><span><Icon name="lock" size={17}/> Tamper-resistant audit trail</span><span><Icon name="camera" size={17}/> Geotagged evidence</span><span><Icon name="wifi" size={17}/> Store-and-forward offline mode</span></div></Reveal>
-  </div></section>
+function OfflineLifecycle() {
+  return (
+    <section id="offline-flow" className="section-pad offline-section">
+      <div className="container">
+        <Reveal>
+          <div className="section-header">
+            <div className="eyebrow eyebrow--emerald">OPERATIONAL RESILIENCE</div>
+            <h2>Offline → Sync → Verified</h2>
+            <p>
+              Inspections in rural villages and concrete infrastructure often have zero network coverage.
+              NIRIKSHAN guarantees zero data loss through an automated store-and-forward lifecycle.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="lifecycle-grid">
+          {OFFLINE_LIFECYCLE.map((phase, i) => (
+            <Reveal key={phase.phase} delay={i * 0.08}>
+              <div className="lifecycle-card">
+                <div className="lifecycle-top">
+                  <span className="lifecycle-phase-tag">{phase.phase}</span>
+                  <span className="lifecycle-badge">{phase.badge}</span>
+                </div>
+
+                <div className="lifecycle-art-box">
+                  <img
+                    src={
+                      i === 0
+                        ? '/doodle-offline-sync.png'
+                        : i === 1
+                        ? '/doodle-notify-bell.png'
+                        : '/doodle-citizen-stream.png'
+                    }
+                    alt={phase.title}
+                    className="lifecycle-doodle-img"
+                    loading="lazy"
+                  />
+                </div>
+
+                <div className="lifecycle-body">
+                  <small className="lifecycle-sub">{phase.subtitle}</small>
+                  <h3>{phase.title}</h3>
+                  <p>{phase.desc}</p>
+                </div>
+
+                <ul className="lifecycle-points">
+                  {phase.points.map((pt) => (
+                    <li key={pt}>
+                      <Icon name="check" size={13} />
+                      <span>{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function LiveProof() {
-  return <section className="section-pad proof-section"><div className="container proof-grid"><Reveal><div className="proof-dashboard">
-    <div className="dashboard-top"><div><small>SUPERVISOR SIGNAL</small><strong>Issue #IR-1048</strong></div><span>ACTION REQUIRED</span></div>
-    <div className="incident"><div className="incident-icon"><Icon name="bolt" size={20}/></div><div><b>Critical checklist mismatch</b><p>Evidence received • geotag attached • remote watch available</p></div></div>
-    <div className="incident-bar"><i/></div><div className="incident-labels"><small>TRIAGE</small><small>78% PRIORITY</small></div>
-    <div className="dash-cards"><div><Icon name="video" size={19}/><b>Live CCTV</b><small>RTSP / HLS</small></div><div><Icon name="wifi" size={19}/><b>WebRTC call</b><small>Supervisor ready</small></div></div>
-  </div></Reveal><Reveal delay={0.08}><div><div className="eyebrow eyebrow--mint">FROM EVIDENCE TO ACTION</div><h2 className="section-head">A report shouldn't<br/><span>sit for seven days.</span></h2><p className="body-copy">NIRIKSHAN turns field evidence into an actionable digital event. Supervisors can see alerts, review proof and record resolution without waiting for a paper trail.</p><div className="metric-grid"><div><strong>&lt;500ms</strong><small>Target alert path</small></div><div><strong>150m</strong><small>Presence geofence</small></div></div></div></Reveal></div></section>
+function RealTimeDashboard() {
+  const [filter, setFilter] = useState<'all' | 'flagged' | 'verified'>('all')
+
+  const filtered = SIMULATED_AUDITS.filter((item) => {
+    if (filter === 'flagged') return item.severity === 'high' || item.severity === 'medium'
+    if (filter === 'verified') return item.severity === 'low'
+    return true
+  })
+
+  return (
+    <section id="dashboard" className="section-pad dashboard-section">
+      <div className="container">
+        <Reveal>
+          <div className="section-header">
+            <div className="eyebrow eyebrow--emerald">REAL-TIME MONITORING CONSOLE</div>
+            <h2>Supervisory Operations & Audit Telemetry</h2>
+            <p>
+              District collectors and state nodal officers monitor active field inspections, review
+              geotagged compliance flags, and mandate photographic proof-of-fix.
+            </p>
+
+            <div className="dashboard-filter-bar">
+              <button
+                className={cn('filter-btn', filter === 'all' && 'filter-btn--active')}
+                onClick={() => setFilter('all')}
+              >
+                All Audits ({SIMULATED_AUDITS.length})
+              </button>
+              <button
+                className={cn('filter-btn', filter === 'flagged' && 'filter-btn--active')}
+                onClick={() => setFilter('flagged')}
+              >
+                Flagged Non-Compliance (2)
+              </button>
+              <button
+                className={cn('filter-btn', filter === 'verified' && 'filter-btn--active')}
+                onClick={() => setFilter('verified')}
+              >
+                Verified Clean (1)
+              </button>
+            </div>
+          </div>
+        </Reveal>
+
+        <div className="dashboard-table-card">
+          <div className="table-header-strip">
+            <div className="strip-title">
+              <span className="live-ping-dot" />
+              <strong>LIVE AUDIT FEED</strong>
+              <small>WEBSOCKET PING: 284ms • CONNECTED</small>
+            </div>
+            <span className="strip-meta">3 ACTIVE SECTORS MONITORED</span>
+          </div>
+
+          <div className="audit-list">
+            {filtered.map((audit) => (
+              <div key={audit.id} className={cn('audit-row', `audit-row--${audit.severity}`)}>
+                <div className="row-id-cell">
+                  <span className="audit-id-tag">{audit.id}</span>
+                  <small className="audit-time">{audit.time}</small>
+                </div>
+
+                <div className="row-facility-cell">
+                  <strong>{audit.facility}</strong>
+                  <div className="row-meta-sub">
+                    <span>{audit.inspector}</span>
+                    <span className="meta-sep">•</span>
+                    <span className="text-emerald">{audit.distance}</span>
+                  </div>
+                </div>
+
+                <div className="row-flag-cell">
+                  <p>{audit.flag}</p>
+                </div>
+
+                <div className="row-status-cell">
+                  <span className={cn('status-pill', `status-pill--${audit.severity}`)}>
+                    {audit.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="table-footer-strip">
+            <span>Showing verified live inspection events. All records bound to SHA-256 signatures.</span>
+            <a href={LINKS.portal} target="_blank" rel="noreferrer" className="table-portal-link">
+              Open Full Portal <Icon name="arrow" size={13} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function Architecture() {
-  return <section id="architecture" className="section-pad section-warm"><div className="container">
-    <Reveal><SectionTitle eyebrow="TECHNOLOGY" title="Lightweight in the field.<br/><span>Powerful behind it.</span>" body="A layered system keeps field capture fast while the platform handles authentication, real-time events, cloud data and media transport."/></Reveal>
-    <div className="architecture-grid"><div className="stack-list">{stack.map(([tag, title, desc], i) => <Reveal key={tag} delay={i * 0.04}><div className={cn('stack-row', `stack-row--${i + 1}`)}><span>{tag}</span><div><strong>{title}</strong><p>{desc}</p></div><Icon name="arrow" size={18}/></div></Reveal>)}</div><Reveal delay={0.12}><div className="trust-panel"><div className="eyebrow eyebrow--sky">SECURITY & TRUST</div><div className="trust-item"><Icon name="lock" size={20}/><div><b>JWT</b><span>Authenticated API access</span></div></div><div className="trust-item"><Icon name="pin" size={20}/><div><b>QR + GPS</b><span>Physical presence lock</span></div></div><div className="trust-item"><Icon name="shield" size={20}/><div><b>CRYPTO</b><span>Tamper-resistant audit payload</span></div></div><div className="trust-item"><Icon name="wifi" size={20}/><div><b>OFFLINE</b><span>Store-and-forward field resilience</span></div></div><div className="runtime"><small>RUNTIME PATH</small><strong>Assignment → Verification → Evidence → Alert → Resolution</strong></div></div></Reveal></div>
-  </div></section>
+function MetricsSection() {
+  return (
+    <section className="metrics-strip">
+      <div className="container">
+        <div className="metrics-grid">
+          {CORE_METRICS.map((item, idx) => (
+            <Reveal key={item.label} delay={idx * 0.06}>
+              <div className="metric-cell">
+                <strong className="metric-number">{item.value}</strong>
+                <h4>{item.label}</h4>
+                <p>{item.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function Impact() {
-  return <section id="impact" className="section-pad impact"><div className="container"><Reveal><SectionTitle eyebrow="WHY IT MATTERS" title="Accountability that moves<br/><span>at field speed.</span>" body="NIRIKSHAN focuses on stronger verification, faster intervention and a more auditable operational trail."/></Reveal><div className="impact-grid"><Reveal><article><div className="impact-number">01</div><Icon name="shield" size={24}/><h3>Public fund accountability</h3><p>Unverified inspection outcomes are harder to accept as trusted records.</p></article></Reveal><Reveal delay={0.05}><article><div className="impact-number">02</div><Icon name="bolt" size={24}/><h3>Real-time field oversight</h3><p>Evidence becomes an actionable digital event instead of a delayed report.</p></article></Reveal><Reveal delay={0.1}><article><div className="impact-number">03</div><Icon name="check" size={24}/><h3>Administrative efficiency</h3><p>Less manual follow-up while preserving a traceable audit trail.</p></article></Reveal></div><Reveal delay={0.12}><div className="impact-strip"><div><strong>7 days</strong><span>paper / WhatsApp delay</span></div><i>→</i><div><strong>&lt;500ms</strong><span>target alert path</span></div><div><strong>QR + GPS</strong><span>presence verification</span></div><div><strong>LIVE</strong><span>CCTV + WebRTC</span></div></div></Reveal></div></section>
+function SpecificationsSection() {
+  return (
+    <section id="specs" className="section-pad specs-section">
+      <div className="container">
+        <Reveal>
+          <div className="section-header">
+            <div className="eyebrow eyebrow--emerald">TECHNICAL SPECIFICATIONS</div>
+            <h2>Engineered for Scale and Strict Security</h2>
+            <p>
+              Architected with modular boundaries between field capture, API gateway, media routing,
+              and immutable datastores.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="specs-table-card">
+          <div className="specs-grid">
+            {TECH_SPECS.map((spec) => (
+              <div key={spec.category} className="spec-item">
+                <small className="spec-category">{spec.category}</small>
+                <strong>{spec.tech}</strong>
+                <p>{spec.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="specs-footer-bar">
+            <div>
+              <small>SMART INDIA HACKATHON 2026</small>
+              <strong>Problem ID: {PROJECT_INFO.problemId} • {PROJECT_INFO.team}</strong>
+            </div>
+            <div className="specs-links">
+              <a href={LINKS.github} target="_blank" rel="noreferrer">
+                <Icon name="github" size={15} /> GitHub Repository
+              </a>
+              <a href={LINKS.report} target="_blank" rel="noreferrer">
+                Project Report (PDF)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-function Download({ onQr }: { onQr: () => void }) {
-  return <section id="download" className="section-pad download-section"><div className="container"><Reveal><div className="download-card"><div className="download-orb"/><div className="download-copy"><div className="eyebrow eyebrow--yellow">FOR INSPECTORS</div><h2>Ready for the field?</h2><p>Install the NIRIKSHAN Officer App, or open the live portal to experience the system end-to-end.</p><div className="download-actions"><MagneticButton href={LINKS.app} target="_blank">Download Officer App</MagneticButton><MagneticButton href={LINKS.portal} secondary target="_blank">Open live portal</MagneticButton></div></div><button className="qr-card" onClick={onQr} aria-label="Enlarge Officer App QR code"><span>SCAN TO INSTALL</span><div className="qr-blur"><img src="/nirikshan-app-qr.svg" alt="Officer app QR code"/></div><small>Click to enlarge</small></button></div></Reveal></div></section>
+function DownloadBanner({ onQr }: { onQr: () => void }) {
+  return (
+    <section className="section-pad download-banner-section">
+      <div className="container">
+        <Reveal>
+          <div className="download-banner-card">
+            <div className="banner-content">
+              <div className="eyebrow eyebrow--emerald">EVALUATION READY</div>
+              <h2>Deploy the Inspector App On Any Android Device</h2>
+              <p>
+                Experience NIRIKSHAN first-hand. Scan the QR code with your mobile camera or download
+                the signed APK package directly.
+              </p>
+              <div className="banner-actions">
+                <MagneticButton href={LINKS.app} target="_blank">
+                  <Icon name="download" size={16} /> Download Inspector APK
+                </MagneticButton>
+                <MagneticButton href={LINKS.portal} secondary target="_blank">
+                  Open Command Center
+                </MagneticButton>
+                <button className="banner-qr-trigger" onClick={onQr}>
+                  <Icon name="qr" size={16} /> Scan QR Code
+                </button>
+              </div>
+            </div>
+
+            <div className="banner-qr-interactive" onClick={onQr} role="button" tabIndex={0}>
+              <span>OFFICIAL APK QR</span>
+              <div className="banner-qr-box">
+                <img src="/nirikshan-app-qr.svg" alt="Inspector App QR Code" />
+              </div>
+              <small>Click to enlarge QR code</small>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
 }
 
 function Footer() {
-  return <footer><div className="container footer-grid"><div><Logo/><p>NIRIKSHAN — Smart Real-Time Monitoring & Inspection Mobile App.<br/>Team SquareX • SIH 2026 • SIH26095.</p></div><div className="footer-links"><div><small>EXPLORE</small><a href="#problem">Problem</a><a href="#control">Control layer</a><a href="#architecture">Technology</a><a href="#impact">Impact</a></div><div><small>RESOURCES</small><a href={LINKS.portal} target="_blank" rel="noreferrer">Live portal</a><a href={LINKS.report} target="_blank" rel="noreferrer">Project report</a><a href={LINKS.github} target="_blank" rel="noreferrer">GitHub</a><a href={LINKS.demo} target="_blank" rel="noreferrer">Demo video</a></div></div></div><div className="container footer-bottom"><span>© 2026 NIRIKSHAN — Team SquareX.</span><span>Inspect • Verify • Impact</span></div></footer>
+  return (
+    <footer className="site-footer">
+      <div className="container footer-grid">
+        <div className="footer-brand">
+          <Logo />
+          <p>
+            NIRIKSHAN — Smart Real-Time Monitoring & Physical Presence Inspection Platform.
+            <br />
+            Built for Smart India Hackathon 2026.
+            <br />
+            Problem Statement: {PROJECT_INFO.problemId} • {PROJECT_INFO.team}.
+          </p>
+        </div>
+
+        <div className="footer-links-grid">
+          <div>
+            <small>PLATFORM</small>
+            <a href="#surfaces">Inspector App</a>
+            <a href="#surfaces">Command Center</a>
+            <a href="#trust-engine">Trust Engine</a>
+            <a href="#offline-flow">Offline Lifecycle</a>
+          </div>
+          <div>
+            <small>EVALUATION</small>
+            <a href={LINKS.portal} target="_blank" rel="noreferrer">Live Portal ↗</a>
+            <a href={LINKS.report} target="_blank" rel="noreferrer">Project Report (PDF) ↗</a>
+            <a href={LINKS.github} target="_blank" rel="noreferrer">Source Code ↗</a>
+            <a href={LINKS.demo} target="_blank" rel="noreferrer">Demonstration Video ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <div className="container footer-bottom">
+        <span>© 2026 {PROJECT_INFO.name} • {PROJECT_INFO.team}. All Rights Reserved.</span>
+        <span>Physical Presence Verification • Zero Ghost Inspections</span>
+      </div>
+    </footer>
+  )
 }
 
 export default function Landing() {
@@ -194,15 +869,41 @@ export default function Landing() {
   useEffect(() => {
     const items = Array.from(document.querySelectorAll<HTMLElement>('.reveal'))
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) { items.forEach(el => el.classList.add('reveal--visible')); return }
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('reveal--visible'); observer.unobserve(entry.target) } })
-    }, { threshold: 0.12, rootMargin: '0px 0px -7% 0px' })
-    items.forEach(el => observer.observe(el))
+    if (reduced) {
+      items.forEach((el) => el.classList.add('reveal--visible'))
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal--visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -4% 0px' }
+    )
+    items.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [])
 
-  return <div className="site-shell">
-    <div ref={progressRef} className="scroll-progress" style={{ transform: 'scaleX(0)' }}/><Nav/><main><Hero onQr={() => setQrOpen(true)}/><Problem/><Workflow/><LiveProof/><Architecture/><Impact/><Download onQr={() => setQrOpen(true)}/></main><Footer/><QRModal open={qrOpen} onClose={() => setQrOpen(false)}/>
-  </div>
+  return (
+    <div className="site-shell">
+      <div ref={progressRef} className="scroll-progress" style={{ transform: 'scaleX(0)' }} />
+      <Nav onQr={() => setQrOpen(true)} />
+      <main>
+        <Hero onQr={() => setQrOpen(true)} />
+        <ProductSurfaces />
+        <TrustEngine />
+        <OfflineLifecycle />
+        <RealTimeDashboard />
+        <MetricsSection />
+        <SpecificationsSection />
+        <DownloadBanner onQr={() => setQrOpen(true)} />
+      </main>
+      <Footer />
+      <QRModal open={qrOpen} onClose={() => setQrOpen(false)} />
+    </div>
+  )
 }
